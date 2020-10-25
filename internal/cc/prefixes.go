@@ -1,8 +1,8 @@
 package cc
 
 var prefixes map[string]string = map[string]string{
-    "fix":      "Bugfixes",
     "feat":     "Features",
+    "fix":      "Bugfixes",
     "misc":     "Misc",
     "style":    "Styling",
     "docs":     "Documentation",
@@ -13,6 +13,18 @@ var prefixes map[string]string = map[string]string{
 
 func SetPrefixes(pref map[string]string) {
     prefixes = pref
+}
+
+func Order (commits []*ConventionalCommit) map[string][]*ConventionalCommit {
+    out := map[string][]*ConventionalCommit{}
+    for _, name := range getPrefixes() {
+        out[getTypeName(name)] = []*ConventionalCommit{}
+    }
+
+    for _, c := range commits {
+        out[c.NamedType] = append(out[c.NamedType], c)
+    }
+    return out
 }
 
 func getPrefixes() []string {
