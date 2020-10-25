@@ -126,12 +126,12 @@ func init() {
         "",
         "Specific tag to use as start tag for changelog (defaults to latest none-pre release)",
     )
-    generateCmd.Flags().StringVar(
+/*    generateCmd.Flags().StringVar(
         &createTag,
         "tag",
         "",
         "If the generator should also tag the new release with given value (default to empty string)",
-    )
+    )*/
     generateCmd.Flags().BoolVar(
         &shouldPrepend,
         "prepend",
