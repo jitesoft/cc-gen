@@ -1,7 +1,6 @@
 package internal
 
 import (
-    "log"
     "time"
 
     "github.com/go-git/go-git/v5"
@@ -34,8 +33,6 @@ func fillUpCommits(path string, force bool) error {
     }
 
     if len(commits) == 0 {
-        log.Print("no commits in memory, fetching all commits")
-
         repo := getRepository(path)
         headRef, _ := repo.Head()
 
@@ -58,10 +55,7 @@ func fillUpCommits(path string, force bool) error {
             })
             return nil
         })
-    } else {
-        log.Print("commits already in memory")
     }
-
 
     return nil
 }
@@ -73,18 +67,14 @@ func GetCommits(repoPath string, toHash string) ([]*Commit, error) {
         return nil, err
     }
 
-    log.Printf("trying to find hash (%s)...", toHash)
     var out []*Commit
     for _, c := range commits {
         if c.Hash == toHash {
-            log.Printf("Hash found %s.", c.Hash)
             break
         }
 
         out = append(out, c)
     }
-
-    log.Printf("Total commits between current (head) and %s: %d", toHash, len(out))
 
     return out, nil
 }

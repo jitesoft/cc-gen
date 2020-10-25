@@ -50,18 +50,15 @@ var generateCmd = &cobra.Command{
             }
         }
 
+        log.Print("Building changelog...")
+
         commits, err := internal.GetCommits(path, fromCommit)
 
         if err != nil {
             return err
         }
 
-        log.Printf("Count %d", len(commits))
-        // Filter
-        c := cc.FilterCommits(commits)
-
-        final := cc.Order(cc.ExtractAll(c))
-
+        final := cc.Order(cc.ExtractAll(cc.FilterCommits(commits)))
         var writer io.Writer
         content := []byte("")
         if stdout == true {
@@ -93,6 +90,7 @@ var generateCmd = &cobra.Command{
             }
         }
 
+        log.Printf("Changelog completed... Writing to output...")
         return outputTmpl.Execute(writer, templateData{
             Commits:   final,
             Tag:       args[0],

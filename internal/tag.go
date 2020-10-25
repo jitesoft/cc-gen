@@ -18,8 +18,6 @@ func GetLastTag(repoPath string) (*Tag, error) {
     head, err := repo.Head()
     if err != nil {
         return nil, fmt.Errorf("failed to find head")
-    } else {
-        log.Printf("current head is %s", head.Hash().String())
     }
 
     allTags, err := repo.Tags()
@@ -46,8 +44,6 @@ func GetLastTag(repoPath string) (*Tag, error) {
                     }
                 }
             }
-        } else {
-            log.Print("tag hash was the same as the head hash, so skipping it")
         }
         return nil
     })
@@ -55,8 +51,6 @@ func GetLastTag(repoPath string) (*Tag, error) {
     if tag == nil {
         return nil, fmt.Errorf("failed to find a tag")
     }
-
-    log.Printf("found latest tag (%s) with hash %s", tag.Name().Short(), tag.Hash().String())
 
     return &Tag{
         Name:   tag.Name().String(),
@@ -71,7 +65,6 @@ func GetTag(repoPath string, name string) (*Tag, error) {
     if err != nil {
         return nil, err
     }
-
 
     if tag == nil {
         log.Printf("tag %s does not exist in repository %s", name, repoPath)
@@ -89,8 +82,6 @@ func GetTag(repoPath string, name string) (*Tag, error) {
     if cHash == "" {
         cHash = tag.Hash().String()
     }
-
-    log.Printf("found tag (%s) with hash %s", tag.Name().Short(), cHash)
 
     return &Tag{
         Name:   tag.Name().Short(),
