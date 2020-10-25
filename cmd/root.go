@@ -19,6 +19,7 @@ var (
     commitUri     string = ""
     shouldPrepend bool   = true
     stdout        bool   = false
+    extTemplate   string = ""
 )
 
 var generateCmd = &cobra.Command{
@@ -90,6 +91,13 @@ var generateCmd = &cobra.Command{
             }
         }
 
+        if extTemplate != "" {
+            outputTmpl, err = template.New("markdown").ParseFiles(extTemplate)
+            if err != nil {
+                return err
+            }
+        }
+
         log.Printf("Changelog completed... Writing to output...")
         return outputTmpl.Execute(writer, templateData{
             Commits:   final,
@@ -126,12 +134,18 @@ func init() {
         "",
         "Specific tag to use as start tag for changelog (defaults to latest none-pre release)",
     )
-/*    generateCmd.Flags().StringVar(
-        &createTag,
-        "tag",
+    generateCmd.Flags().StringVar(
+        &extTemplate,
+        "template",
         "",
-        "If the generator should also tag the new release with given value (default to empty string)",
-    )*/
+        "Path to template to use instead of default",
+    )
+    /*    generateCmd.Flags().StringVar(
+          &createTag,
+          "tag",
+          "",
+          "If the generator should also tag the new release with given value (default to empty string)",
+      )*/
     generateCmd.Flags().BoolVar(
         &shouldPrepend,
         "prepend",
