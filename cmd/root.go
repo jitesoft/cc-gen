@@ -26,7 +26,7 @@ var generateCmd = &cobra.Command{
     Use:     "cc-gen",
     Short:   "Generate a changelog.",
     Long:    "Generates a changelog in the defined project.",
-    Example: "generate 1.2.3 --from=1.0.2 project/",
+    Example: "cc-gen 1.2.3 --from=1.0.2 project/",
     Args:    cobra.ExactArgs(2),
     RunE: func(cmd *cobra.Command, args []string) error {
         path := args[1]

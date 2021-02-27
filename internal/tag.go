@@ -3,6 +3,7 @@ package internal
 import (
     "fmt"
     "log"
+    "strings"
 
     "github.com/blang/semver/v4"
     "github.com/go-git/go-git/v5/plumbing"
@@ -11,6 +12,19 @@ import (
 type Tag struct {
     Name   string
     Commit string
+}
+
+var preReleaseNames = []string{
+    "alpha", "beta", "rc",
+}
+
+func isPreRelease(tag string) bool {
+    for _, n := range preReleaseNames {
+        if strings.Contains(tag,  n) {
+            return true
+        }
+    }
+    return false
 }
 
 func GetLastTag(repoPath string) (*Tag, error) {

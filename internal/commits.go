@@ -38,7 +38,7 @@ func fillUpCommits(path string, force bool) error {
 
         cIter, err := repo.Log(&git.LogOptions{
             From: headRef.Hash(),
-            All:  true,
+            All:  false,
         })
 
         if err != nil {
