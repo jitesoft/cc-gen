@@ -7,23 +7,27 @@ import (
 	"text/template"
 )
 
-// Data contains data which is used to render the template.
-type Data struct {
+type TagData struct {
 	Commits   map[string][]*conventional.Commit
-	Tag       string
+	Name       string
+
+}
+
+type Data struct {
 	CommitUri string
 	Extra     string
+	Tags      []*TagData
 }
 
 var templates = map[string]*template.Template{}
 
 func init() {
-	templates["default"] = template.Must(template.New("markdown").Parse(`# {{ .Tag }}
-{{ range $key, $value := .Commits }}
-{{- if $value }}
-## {{ $key }}
-{{ range $value }}
-  * {{ if $.CommitUri }}[{{- .Hash }}]({{ $.CommitUri }}{{ .Hash }}){{ else }}[{{- .Hash }}]{{ end }} {{ .Header }} <small>By: {{ .Author }} @ {{ .Time }}</small>
+	templates["default"] = template.Must(template.New("markdown").Parse(`{{ range $tag := .Tags -}}
+### {{ .Name }}
+{{ range $type, $commits := .Commits }}
+#### {{ $type }}
+{{ range $commits }}
+  * {{ if $.CommitUri }}[{{- slice .Hash 0 8 }}]({{ $.CommitUri }}{{ .Hash }}){{ else }}[{{- slice .Hash 0 8 }}]{{ end }} {{ .Header }} <small>By: {{ .Author }} @ {{ .Time }}</small>
 {{- end }}
 {{ end }}
 {{- end }}
