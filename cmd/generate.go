@@ -24,7 +24,7 @@ var generateCmd = &cobra.Command{
 	Use:     "generate [tag name]",
 	Aliases: []string{"gen", "build"},
 	Short:   "Generate a changelog.",
-	Long: `Generates a changelog in the defined project.
+	Long: `Generates a changelog in the current project.
 Passing a tag name (optional) will mark the latest as under the given tag.
 If the latest commit is tagged, that will be used instead of the tag name argument.
 If the latest commit is not tagged and tag name is excluded 'latest' will be used instead.`,
@@ -53,7 +53,7 @@ If the latest commit is not tagged and tag name is excluded 'latest' will be use
 		}
 
 		firstHash := branch.Commits[0].Hash
-		lastHash  := branch.Commits[len(branch.Commits) - 1].Hash
+		lastHash := branch.Commits[len(branch.Commits)-1].Hash
 
 		if !full {
 			if len(fromTag) > 0 {

@@ -46,9 +46,9 @@ func ParseConventional(c *gitwrapper.Commit) (*Commit, error) {
 	extracted := extractor.FindAllStringSubmatch(c.Message, -1)
 
 	return &Commit{
-		Type:    extracted[0][1],
-		SubType: extracted[0][2],
-		Header:  extracted[0][3],
+		Type:    strings.TrimSpace(extracted[0][1]),
+		SubType: strings.TrimSpace(extracted[0][2]),
+		Header:  strings.TrimSpace(extracted[0][3]),
 		Message: strings.TrimSpace(extracted[0][4]),
 		Hash:    c.Hash,
 		Author:  c.Author,
