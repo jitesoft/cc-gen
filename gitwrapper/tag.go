@@ -5,13 +5,13 @@ import (
 )
 
 type Tag struct {
-	Name string
-	Hash string
+	Name    string
+	Hash    string
 	TagHash string
-	Tagger string
-	Email string
+	Tagger  string
+	Email   string
 	Message string
-	Time time.Time
+	Time    time.Time
 }
 
 func FindTagByHash(tags []*Tag, hash string) *Tag {
@@ -51,7 +51,7 @@ func GetTagRangeFrom(tags []*Tag, from string) []*Tag {
 	return tags
 }
 
-func GetTagRangeTo(tags []*Tag, from string) []*Tag  {
+func GetTagRangeTo(tags []*Tag, from string) []*Tag {
 	for i, t := range tags {
 		if t.Hash == from {
 			// We can sub-slice here as we won't modify the commit either way.
@@ -69,11 +69,10 @@ func GetTagRangeBetween(tags []*Tag, fromHash string, toHash string) []*Tag {
 			j = i
 		}
 		if t.Hash == toHash {
-			k = i+1
+			k = i + 1
 			break
 		}
 	}
 
 	return tags[j:k]
 }
-

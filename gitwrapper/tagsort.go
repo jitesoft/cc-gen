@@ -15,10 +15,10 @@ func (by sortTagsBy) Sort(tags []*Tag) {
 
 type tagSorter struct {
 	tags []*Tag
-	by func(t1, t2 *Tag) bool
+	by   func(t1, t2 *Tag) bool
 }
 
-func (t *tagSorter) Len () int {
+func (t *tagSorter) Len() int {
 	return len(t.tags)
 }
 
