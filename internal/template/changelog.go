@@ -8,8 +8,8 @@ import (
 )
 
 type TagData struct {
-	Commits   map[string][]*conventional.Commit
-	Name       string
+	Commits map[string][]*conventional.Commit
+	Name    string
 
 }
 
@@ -27,10 +27,10 @@ func init() {
 {{ range $type, $commits := .Commits }}
 #### {{ $type }}
 {{ range $commits }}
-  * {{ if $.CommitUri }}[{{- slice .Hash 0 8 }}]({{ $.CommitUri }}{{ .Hash }}){{ else }}[{{- slice .Hash 0 8 }}]{{ end }} {{ .Header }} <small>By: {{ .Author }} @ {{ .Time }}</small>
+  * {{ if $.CommitUri }}[{{- slice .Hash 0 8 }}]({{ printf $.CommitUri .Hash }}){{ else }}[{{- slice .Hash 0 8 }}]{{ end }} {{ .Header }} <small>By: {{ .Author }} @ {{ .Time }}</small>
 {{- end }}
 {{ end }}
-{{- end }}
+{{ end }}
 {{ .Extra }}
 `))
 }

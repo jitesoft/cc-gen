@@ -89,15 +89,6 @@ func GetTags() ([]*Tag, error) {
 		repo = repository
 	}
 
-/*err := repo.Fetch(&git.FetchOptions{
-		Tags:  git.AllTags,
-		Progress: os.Stdout,
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch tags: %s", err)
-	}*/
-
 	var result []*Tag
 
 	tIter, _ := repo.TagObjects()

@@ -14,6 +14,15 @@ type Tag struct {
 	Time time.Time
 }
 
+func FindTagByHash(tags []*Tag, hash string) *Tag {
+	for _, t := range tags {
+		if t.Hash == hash {
+			return t
+		}
+	}
+	return nil
+}
+
 func FindTag(tags []*Tag, name string) *Tag {
 	for _, t := range tags {
 		if t.Name == name {
@@ -23,6 +32,14 @@ func FindTag(tags []*Tag, name string) *Tag {
 	return nil
 }
 
+func FindTagIndex(tags []*Tag, name string) int {
+	for i, t := range tags {
+		if t.Name == name {
+			return i
+		}
+	}
+	return -1
+}
 
 func GetTagRangeFrom(tags []*Tag, from string) []*Tag {
 	for i, t := range tags {
