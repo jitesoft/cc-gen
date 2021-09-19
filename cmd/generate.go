@@ -5,30 +5,30 @@ import (
 	"github.com/jitesoft/cc-gen/gitwrapper/conventional"
 	"github.com/jitesoft/cc-gen/internal/template"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
 	"os"
-	"io/ioutil"
 )
 
 var (
-	title string     // Title of the release, defaults to no title.
 	commitUri string // Uri to where commits should be linked.
-	full bool        // If true, _all_ tags should be generated in the changelog.
-	stdout bool      // If output is to go to stdout instead of file.
-	prepend bool     // If changes should be prepended in case a changelog already exist.
-	untilTag string  // Tag name to stop at, will override 'full'.
-	fromTag string   // Tag name to use as start.
+	full      bool   // If true, _all_ tags should be generated in the changelog.
+	stdout    bool   // If output is to go to stdout instead of file.
+	prepend   bool   // If changes should be prepended in case a changelog already exist.
+	untilTag  string // Tag name to stop at, will override 'full'.
+	fromTag   string // Tag name to use as start.
+	fileName  string // Name of file, if not stdout.
 )
 
 var generateCmd = &cobra.Command{
 	Use:     "generate [tag name]",
-	Aliases: []string{ "gen", "build" },
+	Aliases: []string{"gen", "build"},
 	Short:   "Generate a changelog.",
-	Long:    `Generates a changelog in the defined project.
+	Long: `Generates a changelog in the defined project.
 Passing a tag name (optional) will mark the latest as under the given tag.
 If the latest commit is tagged, that will be used instead of the tag name argument.
 If the latest commit is not tagged and tag name is excluded 'latest' will be used instead.`,
-	Example: "cc-gen generate 1.2.3 --title=latest-awesome-release",
+	Example: "cc-gen generate 1.2.3",
 	Args:    cobra.MaximumNArgs(1),
 	Version: Version,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,49 +48,74 @@ If the latest commit is not tagged and tag name is excluded 'latest' will be use
 			log.Panic(err)
 		}
 
-		tag := tags[0]
 		if branch.Commits[0].Hash == tags[0].Hash {
-			tag = tags[1]
-			latestTag = tags[1].Name
+			latestTag = tags[0].Name
 		}
 
-		firstHash := branch.Commits[0].Hash // Current commit.
-		lastHash  := branch.Commits[len(branch.Commits) - 1].Hash // Last of all!
+		firstHash := branch.Commits[0].Hash
+		lastHash  := branch.Commits[len(branch.Commits) - 1].Hash
 
 		if !full {
 			if len(fromTag) > 0 {
-				firstHash = gitwrapper.FindTag(tags, fromTag).Hash
+				t := gitwrapper.FindTag(tags, fromTag)
+				latestTag = t.Name
+				firstHash = t.Hash
 			}
+
 			if len(untilTag) > 0 {
 				lastHash = gitwrapper.FindTag(tags, untilTag).Hash
 			}
 		}
 
-		tags := gitwrapper.GetTagRangeBetween(tags, firstHash, lastHash)
-
-
-
-
-		var commits []*conventional.Commit
+		tagData := make(map[string][]*conventional.Commit)
+		currentTag := latestTag
+		hasFirst := false
+		tagData[currentTag] = []*conventional.Commit{}
 		for _, c := range branch.Commits {
-			if c.Hash == tag.Hash {
+			// Check if the hash is a tag, if it is, we want to use another 'current tag'.
+			// Have to be done even if we haven't reached the first hash.
+			if tag := gitwrapper.FindTagByHash(tags, c.Hash); tag != nil {
+				currentTag = tag.Name
+			}
+
+			// Find first hash or continue.
+			if !hasFirst && c.Hash != firstHash {
+				continue
+			}
+			hasFirst = true
+
+			// Last hash? then break!
+			if c.Hash == lastHash {
 				break
 			}
 
+			// If the commit is conventional, we add it to the list.
 			if conventional.IsConventional(c) {
-				con, _ := conventional.ParseConventional(c)
-				commits = append(commits, con)
+				cc, _ := conventional.ParseConventional(c)
+				// currentTag is the tag name, we add the commit to its array.
+				tagData[currentTag] = append(tagData[currentTag], cc)
 			}
+		}
+
+		// After collecting all commits, we have to create the tag data and group
+		// the commits under their 'type'. Can't be done above, as we don't have
+		// all in the list at that point.
+		var outputData []*template.TagData
+		for t, c := range tagData {
+			outputData = append(outputData, &template.TagData{
+				Commits: conventional.GroupByType(c),
+				Name:    t,
+			})
 		}
 
 		output := os.Stdout
 		extra := ""
 		if !stdout {
 			if !prepend {
-				output, _ = os.Create("CHANGELOG.md")
+				output, _ = os.Create(fileName)
 			} else {
-				output, _ = os.OpenFile("CHANGELOG.md", os.O_RDWR | os.O_CREATE, 0755)
-				fileData, err := ioutil.ReadFile("CHANGELOG.md")
+				output, _ = os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0755)
+				fileData, err := ioutil.ReadFile(fileName)
 				if err != nil {
 					extra = ""
 				} else {
@@ -100,21 +125,14 @@ If the latest commit is not tagged and tag name is excluded 'latest' will be use
 		}
 
 		err = template.RenderTemplate(&template.Data{
-			CommitUri: "",
+			CommitUri: commitUri,
 			Extra:     extra,
-			Tags: []*template.TagData{
-				{
-					Commits:   conventional.GroupByType(commits),
-					Name:      latestTag,
-				},
-			},
+			Tags:      outputData,
 		}, "default", output)
 
 		if err != nil {
 			log.Panic(err)
 		}
-
-
 
 		return nil
 	},
@@ -129,7 +147,7 @@ func init() {
 	)
 	generateCmd.Flags().StringVar(
 		&untilTag,
-		"until",
+		"to",
 		"",
 		"Specific tag to stop at (defaults to latest tag or, in case it shares hash with latest commit, the one before)",
 	)
@@ -143,7 +161,7 @@ func init() {
 		&prepend,
 		"prepend",
 		true,
-		"If true and a CHANGELOG.md file exists, the tool will prepend to the file, else it will create or replace the CHANGELOG.md file (default true)",
+		"If true and a [output] file exists, the tool will prepend to the file, else it will create or replace the [output] file (default true)",
 	)
 	generateCmd.Flags().BoolVar(
 		&stdout,
@@ -156,7 +174,14 @@ func init() {
 		"commit-uri",
 		"c",
 		"",
-		"Sets base URI to append commit sha to",
+		"Sets base URI to use as link to commits. Uses sprintf format with a single %s where hash will be inserted",
+	)
+	generateCmd.Flags().StringVarP(
+		&fileName,
+		"output",
+		"o",
+		"CHANGELOG.md",
+		"Filename to write the generated changelog to. Not used in `stdout` mode (defaults to CHANGELOG.md)",
 	)
 
 	rootCmd.AddCommand(generateCmd)
