@@ -11,9 +11,9 @@ var (
 	repo *git.Repository
 )
 
-func GetCurrentBranch() (*Branch, error) {
+func GetCurrentBranch(path string) (*Branch, error) {
 	if repo == nil {
-		repository, err := git.PlainOpen("./")
+		repository, err := git.PlainOpen(path)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to open repository: %s", err)
@@ -51,9 +51,9 @@ func GetCurrentBranch() (*Branch, error) {
 
 // GetBranch uses the internal go-git library to check out a branch
 // and add all the commits in said branch as Commit objects.
-func GetBranch(branchName string) (*Branch, error) {
+func GetBranch(branchName string, path string) (*Branch, error) {
 	if repo == nil {
-		repository, err := git.PlainOpen("./")
+		repository, err := git.PlainOpen(path)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to open repository: %s", err)
@@ -75,13 +75,13 @@ func GetBranch(branchName string) (*Branch, error) {
 		return nil, err
 	}
 
-	return GetCurrentBranch()
+	return GetCurrentBranch(path)
 }
 
 // GetTags parses repository tags and returns a list of Tag objects.
-func GetTags() ([]*Tag, error) {
+func GetTags(path string) ([]*Tag, error) {
 	if repo == nil {
-		repository, err := git.PlainOpen("./")
+		repository, err := git.PlainOpen(path)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to open repository: %s", err)
