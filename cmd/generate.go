@@ -28,13 +28,18 @@ var generateCmd = &cobra.Command{
 Passing a tag name (optional) will mark the latest as under the given tag.
 If the latest commit is tagged, that will be used instead of the tag name argument.
 If the latest commit is not tagged and tag name is excluded 'latest' will be used instead.`,
-	Example: "cc-gen generate 1.2.3",
-	Args:    cobra.MaximumNArgs(1),
+	Example: "cc-gen generate ./ 1.2.3",
+	Args:    cobra.MaximumNArgs(2),
 	Version: Version,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		branch, err := gitwrapper.GetCurrentBranch()
-		latestTag := "latest"
+		path := "./"
 		if len(args) > 0 {
+			path = args[0]
+		}
+
+		branch, err := gitwrapper.GetCurrentBranch(path)
+		latestTag := "latest"
+		if len(args) > 1 {
 			latestTag = args[0]
 		}
 
@@ -42,13 +47,18 @@ If the latest commit is not tagged and tag name is excluded 'latest' will be use
 			log.Panic(err)
 		}
 
-		tags, err := gitwrapper.GetTags()
+		tags, err := gitwrapper.GetTags(path)
 
 		if err != nil {
 			log.Panic(err)
 		}
 
-		if branch.Commits[0].Hash == tags[0].Hash {
+		if len(branch.Commits) <= 0 {
+			log.Println("Can't generate changelog without any commits")
+			os.Exit(0)
+		}
+
+		if len(tags) > 0 && branch.Commits[0].Hash == tags[0].Hash {
 			latestTag = tags[0].Name
 		}
 
