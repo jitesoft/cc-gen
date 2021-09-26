@@ -17,7 +17,7 @@ build:
     - if: '$CI_COMMIT_TAG'
       when: always
     - when: never
-  image: registry.gitlab.com/jitesoft/dockerfiles/go:1.16
+  image: registry.gitlab.com/jitesoft/dockerfiles/go:1.17
   parallel:
     matrix:
       - { GOARCH: "amd64", GOOS: "linux",   FILENAME: "cc-gen" }
@@ -71,6 +71,7 @@ publish:
 
 pre-container:
   stage: publish
+  image: registry.gitlab.com/jitesoft/dockerfiles/misc:latest
   parallel:
     matrix:
       - { ARCH: "amd64", OS: "linux" }
