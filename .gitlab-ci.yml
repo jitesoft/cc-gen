@@ -3,6 +3,7 @@ include:
     project: jitesoft/gitlab-ci-lib
 
 stages:
+  - test
   - build
   - publish
   - containerize
