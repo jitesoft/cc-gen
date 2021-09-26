@@ -1,19 +1,35 @@
 # CC-Gen
 
 Simple golang cli to generate a changelog from your repository using
-conventional commits and semver tags as versions.
+conventional commits.
 
 This cli was mainly written for internal use, but is okay to use and/or contribute to as much as wanted!
 
 ## Usage
 
+### Binary usage
+
+Download the proper version from https://gitlab.com/jitesoft/open-source/go/cc-gen/-/packages
+Extract the binary and add to your path.
+
 Usage is quite simple, all you need to do is run the executable:
 
 ```
-cc-gen [new version] [path to repo or . ]
+cc-gen [optional path to repo or . ] [optional version name]
 ```
 
 Make sure to check out `cc-gen --help` for information about flags.
+
+### Docker usage
+
+The application is also distributed as docker images one based on Alpine while the other
+is based on scratch.
+
+A /data directory is available to easily mount your repository and just run the image:
+
+```sh 
+docker run --rm registry.gitlab.com/jitesoft/open-source/go/cc-gen:latest -v $(pwd):/data generate [args] 
+```
 
 ## Building
 
@@ -24,13 +40,18 @@ go mod download
 go build
 ```
 
+Or if you wish to build for all common platforms:
+
+```sh 
+./build.sh [version]
+```
+
 No extra stuff required.
 
 ## Libraries used
 
 The cli uses the following libraries as direct dependencies:
 
-* `github.com/blang/semver/v4`
 * `github.com/go-git/go-git/v5`
 * `github.com/spf13/cobra`
 
