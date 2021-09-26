@@ -64,7 +64,7 @@ publish:
     VERSION: $CI_COMMIT_VERSION
   script:
     - FILE=cc-gen-${ARCH}-${OS}.tar.gz
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ${FILE} "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/cc-gen/${VERSION}/${FILE}"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file bin/${FILE} "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/cc-gen/${VERSION}/${FILE}"'
   needs:
     - job: build
       artifacts: true
@@ -82,8 +82,8 @@ pre-container:
     - when: never
   script:
     - mkdir binaries
-    - tar -xz bin/cc-gen-${ARCH}-${OS}.tar.gz
-    - mv cc-gen binaries/cc-gen-${ARCH}
+    - tar -xzhf bin/cc-gen-${ARCH}-${OS}.tar.gz -C binaries/
+    - mv binaries/cc-gen binaries/cc-gen-${ARCH}
   needs:
     - job: build
       artifacts: true
