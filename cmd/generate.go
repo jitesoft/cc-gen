@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -42,6 +43,13 @@ If the latest commit is not tagged and tag name is excluded 'latest' will be use
 		if len(args) > 1 {
 			latestTag = args[0]
 		}
+
+		ap, err := filepath.Abs(path)
+		if err != nil {
+			log.Panic(err)
+		}
+		log.Printf("Building changelog for %s", ap)
+		path = ap
 
 		if err != nil {
 			log.Panic(err)

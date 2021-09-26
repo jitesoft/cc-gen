@@ -37,7 +37,7 @@ build:
     - go build -ldflags "-s -w -X github.com/jitesoft/cc-gen/cmd.Version=${CI_COMMIT_TAG}"
     - mkdir bin
   after_script:
-    - tar tar -zc "${FILENAME}" -f bin/cc-gen-${GOARCH}-${GOOS}.tar.gz
+    - tar tar -czf bin/cc-gen-${GOARCH}-${GOOS}.tar.gz "${FILENAME}"
   artifacts:
     when: on_success
     paths:
