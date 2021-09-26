@@ -4,6 +4,7 @@ include:
 
 stages:
   - build
+  - publish
   - containerize
 
 build:
@@ -22,12 +23,17 @@ build:
       - { GOARCH: "arm64", GOOS: "linux",   FILENAME: "cc-gen" }
       - { GOARCH: "arm",   GOOS: "linux",   FILENAME: "cc-gen" }
       - { GOARCH: "amd64", GOOS: "darwin",  FILENAME: "cc-gen" }
+      - { GOARCH: "arm64", GOOS: "darwin",  FILENAME: "cc-gen" }
       - { GOARCH: "amd64", GOOS: "windows", FILENAME: "cc-gen.exe" }
+      - { GOARCH: "riscv64", GOOS: "linux", FILENAME: "cc-gen" }
+      - { GOARCH: "mips64", GOOS: "linux", FILENAME: "cc-gen" }
   before_script:
     - apk add --no-cache tar
+  variables:
+    CGO_ENABLED: 0
   script:
     - go mod download
-    - go build -ldflags "-X github.com/jitesoft/cc-gen/cmd.Version=${CI_COMMIT_TAG}"
+    - go build -ldflags "-s -w -X github.com/jitesoft/cc-gen/cmd.Version=${CI_COMMIT_TAG}"
     - mkdir bin
   after_script:
     - tar tar -zc "${FILENAME}" -f bin/cc-gen-${GOARCH}-${GOOS}.tar.gz
@@ -37,7 +43,54 @@ build:
       - bin
     expire_in: 1 day
 
-containerize:
+publish:
+  stage: publish
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH == "master"'
+      when: always
+    - when: never
+  parallel:
+    matrix:
+      - { ARCH: "amd64", OS: "linux" }
+      - { ARCH: "arm64", OS: "linux" }
+      - { ARCH: "arm",   OS: "linux" }
+      - { ARCH: "amd64", OS: "darwin" }
+      - { ARCH: "arm64", OS: "darwin" }
+      - { ARCH: "amd64", OS: "windows" }
+      - { ARCH: "riscv64", OS: "linux" }
+      - { ARCH: "mips64", OS: "linux" }
+  variables:
+    VERSION: $CI_COMMIT_VERSION
+  script:
+    - FILE=cc-gen-${ARCH}-${OS}.tar.gz
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ${FILE} "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/cc-gen/${VERSION}/${FILE}"'
+  needs:
+    - job: build
+      artifacts: true
+
+pre-container:
+  stage: publish
+  parallel:
+    matrix:
+      - { ARCH: "amd64", OS: "linux" }
+      - { ARCH: "arm64", OS: "linux" }
+      - { ARCH: "arm",   OS: "linux" }
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH == "master"'
+      when: always
+    - when: never
+  script:
+    - mkdir binaries
+    - tar -xz bin/cc-gen-${ARCH}-${OS}.tar.gz
+    - mv cc-gen binaries/cc-gen-${ARCH}
+  needs:
+    - job: build
+      artifacts: true
+  artifacts:
+    paths:
+      - binaries/
+
+.containerize:
   tags:
     - protected
     - jitesoft
@@ -47,9 +100,17 @@ containerize:
       when: always
     - when: never
   needs:
-    - job: build
+    - job: pre-container
       artifacts: true
   image: registry.gitlab.com/jitesoft/dockerfiles/misc:latest
   stage: containerize
+
+containerize:alpine:
+  extends: .containerize
   script:
-    - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --progress plain --build-arg VERSION=${CI_COMMIT_TAG} --push -t ${CI_REGISTRY_IMAGE}:${$CI_COMMIT_TAG} -t ${CI_REGISTRY_IMAGE}:latest .
+    - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --progress plain --build-arg BASE_IMAGE=alpine --build-arg VERSION=${CI_COMMIT_TAG} --push -t ${CI_REGISTRY_IMAGE}/alpine:${$CI_COMMIT_TAG} -t ${CI_REGISTRY_IMAGE}/alpine:latest .
+
+containerize:scratch:
+  extends: .containerize
+  script:
+    - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --progress plain --build-arg BASE_IMAGE=scratch --build-arg VERSION=${CI_COMMIT_TAG} --push -t ${CI_REGISTRY_IMAGE}:${$CI_COMMIT_TAG} -t ${CI_REGISTRY_IMAGE}:latest .
